@@ -1,0 +1,23 @@
+Contexto: estou usando o Claude Code no "Windows 11 pro". 
+Quero criar um sistema de leitura em voz alta automática das respostas que você me dá, para eu poder ouvir o resultado em vez de precisar ficar lendo o terminal o tempo todo, aumentando minha produtividade enquanto trabalho em outras tarefas ao mesmo tempo.
+Objetivo: criar um programa em Python que funcione como um vigia dos arquivos de sessão do Claude Code, salvos localmente em formato jaison linha, dentro da pasta do usuário, e que, toda vez que uma nova resposta sua for concluída, leia em voz alta apenas o conteúdo novo daquela resposta, sem repetir nada do histórico anterior.
+Requisitos funcionais: primeiro, localizar automaticamente a pasta onde ficam os arquivos de sessão do Claude Code no Windows. Segundo, monitorar essa pasta, ou o arquivo da sessão ativa, em tempo real, detectando quando uma nova resposta é adicionada. Terceiro, extrair apenas o texto da resposta mais recente, sem reler o histórico desde o início. Quarto, ignorar blocos de código, chamadas de ferramenta e saídas de comando, lendo só o texto explicativo. Quinto, converter esse texto em áudio usando um mecanismo de texto para fala local, como a biblioteca pyttsx3, sem depender de API paga. Sexto, tocar o áudio automaticamente assim que a resposta terminar. Sétimo, rodar em segundo plano de forma contínua, sem travar ou duplicar leitura. Oitavo, preferência por voz em português do Brasil.
+Restrições: nada de serviço pago ou com chave de API externa, solução cem por cento local e offline. Não ler blocos de código em voz alta. Não reler o histórico inteiro a cada execução, só o conteúdo novo a partir do início do script. E ser resistente a mudança ou criação de novos arquivos de sessão.
+Etapas esperadas: investigar o caminho exato dos arquivos de sessão no Windows onze, definir a lógica de leitura incremental tipo um tail menos f, implementar a limpeza do texto removendo markdown e blocos de código, implementar a conversão para voz e reprodução automática, testar validando que só o conteúdo novo é lido, e empacotar tudo num script único e comentado com instruções de uso.
+Formato da resposta: o script Python completo e comentado, organizado em funções claras, mais um passo a passo curto de instalação e execução.
+
+Regra de comunicação antes de ações técnicas:
+
+Antes de executar qualquer comando no terminal, seja PowerShell, bash, Python, remoção ou renomeação de arquivos, geração de documentos, explique em português simples, em até três frases, antes de mostrar o comando técnico:
+
+Primeiro: o que vai ser feito, em linguagem cotidiana, sem termos de código.
+Segundo: por que essa ação está sendo feita agora.
+Terceiro: o que muda ou o que será afetado, incluindo se algum arquivo será apagado, sobrescrito ou movido.
+
+Só depois dessa explicação, mostrar o comando técnico, se for necessário mostrar. Nunca abrir a interação direto com o bloco de comando sem esse resumo antes.
+
+Evitar jargão técnico desnecessário na explicação, como nomes de parâmetros do sistema ou caminho completo de pasta. Se precisar citar um arquivo, usar só o nome dele, não o caminho inteiro.
+
+Quando pedir confirmação pra uma ação, tipo apagar arquivo ou sobrescrever documento, a pergunta também deve ser em linguagem simples, do tipo "posso apagar o arquivo antigo e manter só o atualizado?", em vez de listar comando.
+
+E o motivo: as respostas estão sendo lidas em voz alta por um leitor de texto, então comando técnico bruto atrapalha o entendimento.

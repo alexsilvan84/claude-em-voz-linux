@@ -1,0 +1,29 @@
+# =============================================================
+#  Fim de linha. Este arquivo nao e detalhe: sem ele o projeto
+#  quebra inteiro.
+#
+#  O git do Windows costuma vir configurado para trocar o fim de
+#  linha ao gravar os arquivos na sua pasta. Num script de shell
+#  isso e fatal: a primeira linha vira "#!/usr/bin/env bash" com
+#  um caractere invisivel no fim, e o Linux responde
+#  "bad interpreter: No such file or directory" - erro que nao
+#  diz nada sobre a causa e ja fez muita gente perder a tarde.
+#
+#  As linhas abaixo mandam guardar e entregar TUDO com o fim de
+#  linha do Linux, aconteca o que acontecer na maquina de quem
+#  clonar.
+# =============================================================
+
+* text=auto eol=lf
+
+*.sh    text eol=lf
+*.py    text eol=lf
+*.txt   text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+
+# Os modelos de voz e qualquer audio, se um dia entrarem, sao
+# binarios: nao devem ser tocados.
+*.onnx  binary
+*.bin   binary
+*.wav   binary

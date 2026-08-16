@@ -1,0 +1,30 @@
+# =============================================================
+#  O que NAO vai para o repositorio.
+# =============================================================
+
+# -------------------------------------------------------------
+#  Conteudo seu, e nao do programa.
+#
+#  O historico guarda tudo o que voce ja ditou; o registro guarda
+#  o texto das respostas que foram lidas em voz alta. Os dois sao
+#  refeitos sozinhos e nao servem a quem for instalar - subi-los
+#  seria publicar as suas conversas junto com o codigo.
+# -------------------------------------------------------------
+historico_de_voz.txt
+registro.txt
+perguntas_pendentes.jsonl
+
+# Qual metade esta ligada AGORA. E refeito com tudo ligado a cada
+# partida, entao versiona-lo so geraria mudanca sem sentido.
+interruptor.json
+
+# -------------------------------------------------------------
+#  Restos do Python e do sistema.
+# -------------------------------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*~
+.directory

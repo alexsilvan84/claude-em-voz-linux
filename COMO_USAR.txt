@@ -1,0 +1,405 @@
+﻿=========================================================
+ CLAUDE EM VOZ - COMO USAR   (versao para Linux)
+ (o Claude fala com voce, e voce fala com o Claude)
+=========================================================
+
+O QUE E
+    Um programa so, claude_em_voz.py, com as duas metades da conversa:
+
+    OUVIR - ele FALA as respostas novas do Claude, inclusive as
+    perguntas de multipla escolha, com as opcoes.
+
+    FALAR - ele ESCREVE o que voce falar, ao vivo, palavra por palavra,
+    enquanto voce ainda esta falando, como a digitacao por voz do
+    celular.
+
+    Funciona 100% offline, sem servico pago e sem chave de acesso. O
+    reconhecimento roda no seu proprio processador.
+
+    Duvidas do tipo "por que ele faz assim?" estao respondidas uma a uma
+    no arquivo PERGUNTAS_E_RESPOSTAS.txt, nesta mesma pasta.
+
+
+UMA COISA PARA SABER LOGO: X11 OU WAYLAND
+    Sao os dois jeitos de o Linux desenhar as janelas, e a diferenca
+    muda o que funciona aqui.
+
+    A metade que FALA - a que le as respostas do Claude em voz alta -
+    funciona igual nos dois. Ela nao depende de janela nenhuma.
+
+    A metade que ESCREVE precisa saber qual janela esta na frente e
+    digitar dentro dela. No X11 isso e permitido e funciona sem
+    ajuste. No Wayland o sistema impede, de proposito, por seguranca:
+    um programa nao pode espiar nem digitar na janela de outro.
+
+    Se voce estiver no Wayland, ha dois caminhos, e o ./diagnostico.sh
+    diz qual serve para voce:
+      - instalar o wtype (funciona no KDE e no Sway; o GNOME recusa);
+      - ou escolher a sessao X11 na tela de login, onde tudo funciona.
+
+    Nao sabe qual voce usa? Rode  ./diagnostico.sh : ele diz na
+    primeira conferencia.
+
+
+E O /voice DO PROPRIO CLAUDE CODE?
+    Existe, e faz DITADO - so ditado. Ele nao le as respostas em voz
+    alta; isso nao existe la. Se voce quer ouvir o Claude, este
+    programa e a unica via.
+
+    E a diferenca que mais pesa no ditado: a documentacao oficial diz
+    que o /voice manda o seu audio para os servidores da Anthropic, e
+    que ele nao e processado localmente. O nosso reconhece tudo aqui
+    dentro, sem internet. O nosso tambem nunca aperta Enter sozinho, e
+    ja fala portugues sem ajuste.
+
+    Onde o /voice ganha: transcreve melhor, nao precisa instalar nada e
+    escreve direto na linha do prompt.
+
+    Quer os dois? Deixe o /voice ditando e o nosso so lendo: digite
+    /voz 2 , que desliga a nossa metade que escreve. A comparacao
+    completa esta no PERGUNTAS_E_RESPOSTAS.txt, secao 1b.
+
+
+A PRIMEIRA VEZ (uma vez so)
+    Num terminal, dentro desta pasta:
+
+        bash INSTALAR_TUDO.sh
+
+    ("bash" na frente porque os arquivos podem chegar sem permissao
+    de execucao, dependendo de como voce copiou a pasta. Ele mesmo
+    conserta isso no fim.)
+
+    Ele instala tudo sozinho - os programas do sistema, as
+    bibliotecas, os reconhecedores de fala e os quatro ganchos - e
+    no fim confere tudo e DIZ em voz alta o que ficou faltando.
+
+    Vai pedir a sua senha uma vez: instalar programa do sistema
+    exige permissao de administrador. O resto nao pede nada.
+
+    O Claude Code nao entra nessa lista de proposito: voce ja o tem
+    instalado, e passar um instalador por cima trocaria a versao
+    dele. O programa so confere que ele esta ai.
+
+    Os comandos soltos, se quiser fazer so uma parte:
+
+    1. Os programas do sistema (no Debian ou Ubuntu; troque o
+       apt pelo dnf, pacman ou zypper conforme o seu Linux):
+           sudo apt install espeak-ng libportaudio2 xdotool
+
+       O espeak e o que FALA. O portaudio e o que OUVE. O xdotool
+       e o que descobre em qual janela escrever. Sem o primeiro o
+       programa funciona e fica mudo; sem o terceiro ele fala, mas
+       o ditado escreve no lugar errado.
+
+    2. As bibliotecas do Python:
+           pip install faster-whisper sounddevice numpy pynput
+
+    3. Baixar os dois reconhecedores (uns 600 MB no total, so desta vez):
+           python3 claude_em_voz.py --baixar
+
+       Este e o UNICO momento em que a internet e usada. Depois disso
+       o programa nunca mais sai do seu computador.
+
+    4. Instalar os quatro ganchos, que ligam e desligam tudo junto
+       com o Claude Code:
+           python3 configurar_ganchos.py
+
+       Ele acerta os caminhos sozinho e guarda uma copia do arquivo
+       antigo. Para desfazer:  python3 configurar_ganchos.py --remover
+
+    5. Conferir tudo de uma vez, ouvindo o resultado:
+           ./diagnostico.sh
+
+
+DESLIGAR E LIGAR NA HORA, SEM FECHAR NADA
+    As vezes voce quer ler em paz, sem ninguem falando. As vezes
+    quer so escutar, sem risco de a tecla disparar. Da para
+    desligar cada metade em separado, sem sair de onde voce esta.
+
+    Digite  /voz  na janela do Claude Code e aperte Enter. Ao digitar
+    a barra ele ja aparece na lista de comandos, entao nao e preciso
+    lembrar de nada. A resposta sai na hora, na propria tela:
+
+        leitura das respostas ... LIGADA
+        ditado pela tecla ....... LIGADO
+
+        /voz 1    desligar a leitura (ele para de falar)
+        /voz 2    desligar o ditado (a tecla para de valer)
+        /voz 3    desligar os dois
+        /voz 4    ligar tudo de volta
+        /voz 5    ler de novo a ultima resposta
+
+    Essa linha NAO vira pergunta para o Claude: ela e interceptada
+    antes, some da tela e nao gasta nada. Funciona com barra ou
+    sem ( /voz 1 ou voz 1 ), com maiuscula ou sem, com acento ou
+    sem - quem esta ditando por voz nao tem como garantir isso.
+
+    Obedece em menos de meio segundo. Se ele estiver falando uma
+    resposta comprida quando voce mandar calar, ele cala NO MEIO da
+    frase, e o que estava na fila e descartado. Religar serve para
+    voltar a ouvir o que vem A SEGUIR - ele nao despeja de uma vez
+    tudo o que voce perdeu, que seria o contrario do que voce pediu.
+
+    ELE CONFIRMA FALANDO. Ao desligar a leitura voce ouve "leitura
+    em voz alta desligada", e so entao vem o silencio. E a unica
+    frase que atravessa o proprio desligamento, de proposito: assim
+    o silencio que vem depois e resposta ao seu pedido, e nao uma
+    duvida sobre se o programa parou de funcionar.
+
+    (Se a leitura ja estava desligada e voce mexer so no ditado,
+    ele continua calado - voce ja tinha pedido silencio.)
+
+    PERDEU A RESPOSTA? Digite  /voz 5  e ele le a ultima de novo.
+    Serve para quando voce sai da sala esperando a resposta e ela
+    e lida para ninguem. Tambem atende por  /voz repetir  e
+    /voz de novo , e pode ser pedido quantas vezes quiser.
+
+    Ele guarda so a ULTIMA resposta, e so desde que foi ligado -
+    nao e um historico. Com a leitura desligada, ele avisa que
+    repetir nao adiantaria e pede para voce ligar antes.
+
+    Uma frase comprida comecando com "voz" passa direto, como
+    conversa normal: "a voz do Claude esta muito rapida" chega ate
+    ele. So a palavra sozinha, ou ela mais o numero, viram comando.
+
+    VALE PARA AGORA. Ao fechar e abrir o Claude Code, tudo volta
+    ligado. E de proposito: assim ninguem desliga, esquece, e meses
+    depois acha que o programa quebrou.
+
+
+COMO USAR NO DIA A DIA
+    Nao precisa ligar nada: ele sobe sozinho junto com o Claude Code, e
+    desce junto quando voce sai.
+
+    Se em algum momento voce tiver desligado, rode  ./ligar.sh  e ele
+    volta. Ele fica rodando SOLTO DO TERMINAL: pode fechar a janela do
+    terminal a vontade que o programa continua. Isso e de proposito -
+    um programa preso a uma janela morre junto com ela, sem aviso e sem
+    motivo aparente.
+
+    Espere os DOIS BIPES SUBINDO. Eles avisam que ficou pronto - os
+    reconhecedores levam alguns segundos para carregar, e a tecla nao
+    responde antes disso.
+
+    - Clique na janela do Claude Code.
+    - SEGURE O CTRL DA ESQUERDA. Depois de 3 segundos sai um bipe
+      agudo: pode falar, sem soltar a tecla. As palavras vao aparecendo
+      sozinhas, com um atraso de um a dois segundos em relacao a sua
+      voz.
+    - SOLTE A TECLA para terminar a fala. Em alguns segundos a frase e
+      relida por um reconhecedor melhor, que corrige o que saiu errado.
+    - Pode falar de novo quantas vezes quiser: o texto CONTINUA de onde
+      parou, com um espaco no meio. Nada do que ja foi escrito e
+      apagado, mesmo que voce fale de novo enquanto a revisao anterior
+      ainda esta rodando.
+    - Confira a frase e aperte Enter voce mesmo.
+
+    O Enter NUNCA e apertado sozinho, de proposito. Ditado erra, e uma
+    frase errada enviada sozinha faria o Claude executar outra coisa.
+
+    A TECLA SO VALE NO CLAUDE. Em qualquer outro programa ela continua
+    fazendo o que sempre fez - nem chega a ser capturada. Isso e para
+    nao atrapalhar os atalhos que voce ja usa no trabalho.
+
+    ELE AVISA QUE EXISTE. Ao ligar, e toda vez que voce abre um Claude
+    Code novo, aparece uma faixa no canto da tela e uma voz lembra como
+    usar. Para desligar esse lembrete: AVISO_FALADO e AVISO_NA_TELA.
+
+    O CTRL CONTINUA SENDO CTRL. Ninguem segura o Ctrl por tres segundos
+    num Ctrl+C: basta outra tecla ser apertada e a contagem morre na
+    hora. Ctrl+C, Ctrl+V e qualquer outro atalho funcionam normalmente,
+    inclusive com o ditado ja ligado.
+
+    POR QUE O CTRL, E NAO UMA TECLA DE FUNCAO? Porque em notebook a
+    fileira de cima costuma exigir o Fn junto, e segurar duas teclas
+    enquanto se fala ocupa as duas maos. O Ctrl esta sempre ali, e a
+    espera de 3 segundos e o que o faz conviver com os atalhos.
+    Detalhes no PERGUNTAS_E_RESPOSTAS.txt, secao 2.
+
+    QUER OUTRA TECLA? Rode ./descobrir_tecla.sh, aperte a candidata, e
+    escreva a receita que ele mostrar na linha TECLA_DE_FALA.
+
+    Ele liga E desliga sozinho junto com o Claude Code - o ./ligar.sh so
+    e preciso se voce tiver desligado antes.
+    Para desligar na hora: rode ./desligar.sh
+    Para ver o que ele esta fazendo: ./ligar_com_janela.sh (desligue o
+    outro antes), ou abra o arquivo registro.txt
+
+
+POR QUE DOIS RECONHECEDORES
+    Porque um so nao daria conta das duas coisas. Medido nesta maquina:
+    o reconhecedor bom leva quase 4 segundos para processar uma frase -
+    impossivel acompanhar alguem falando. O rapido leva 1 segundo, mas
+    erra mais palavras.
+
+    Entao o rapido escreve ao vivo e o bom revisa no fim. Voce ve o
+    texto surgindo na hora e ainda assim fica com a versao caprichada.
+
+
+ONDE O TEXTO VAI PARAR
+    Na janela que estava na frente NO MOMENTO DO TOQUE que comecou a fala.
+    Se voce clicar em outra janela no meio da fala, ele traz a primeira
+    de volta para a frente antes de escrever.
+
+    Tudo tambem fica guardado em historico_de_voz.txt, aqui nesta pasta,
+    com data e hora - rede de seguranca para quando algo der errado.
+
+    Se voce tiver ligado com ./ligar_com_janela.sh e esse terminal
+    estiver na frente quando apertar, ele avisa com um bipe grave e nao
+    grava: escrever ali nao serviria para nada.
+
+
+A CORRECAO DO FIM
+    Quando voce termina a fala, o reconhecedor bom rele a frase inteira e
+    conserta o que estiver diferente, apagando so do ponto que mudou
+    para a frente.
+
+    Se voce ja tiver comecado a falar de novo, a correcao e PULADA: ela
+    levaria alguns segundos e deixaria a fala nova esperando. Acompanhar
+    voce falando vale mais do que caprichar numa frase ja escrita.
+
+    Ele NAO corrige se voce ja tiver comecado a digitar - apagar por
+    cima do que voce escreveu seria pior que deixar um erro. Quando
+    isso acontece, fica anotado no registro.txt.
+
+    Diferenca so de maiuscula ou de virgula no meio da frase e deixada
+    quieta de proposito: nao vale apagar meia frase por causa disso.
+
+
+COMANDOS EXTRAS
+    ./diagnostico.sh        confere tudo e DIZ o resultado em voz alta
+    ./descobrir_tecla.sh    mostra o que cada tecla do seu teclado manda
+                           (util em notebook, por causa do Fn)
+    ./testar.sh             confere se o programa continua correto depois
+                           de alguma mudanca; nao precisa de microfone
+                           nem de caixa de som, e leva cinco segundos
+
+    E pelo terminal, na pasta do programa:
+    python3 claude_em_voz.py --diagnostico   o mesmo do ./diagnostico.sh
+    python3 claude_em_voz.py --teste-ditado  grava 5 segundos e MOSTRA o
+                                            que cada reconhecedor
+                                            entendeu, sem escrever nada
+    python3 claude_em_voz.py --teste-voz     fala tres frases de teste
+    python3 claude_em_voz.py --teste-pronuncia  fala cada termo da tabela
+                                            de pronuncia, do jeito escrito
+                                            e do jeito corrigido
+    python3 claude_em_voz.py --vozes         lista as vozes instaladas
+    python3 claude_em_voz.py --dispositivos  lista os microfones
+    python3 claude_em_voz.py --baixar        so baixa os reconhecedores
+    python3 claude_em_voz.py --so-leitor     liga so a metade que fala
+    python3 claude_em_voz.py --so-ditado     liga so a metade que escreve
+
+
+AJUSTES (abrir claude_em_voz.py e mudar la no comeco)
+    TECLA_DE_FALA       qual tecla usar. Padrao "ctrl_l" (o Ctrl da
+                        esquerda). Vale tambem "f9", "f8", "scroll_lock",
+                        "pause", ou o numero cru da tecla ("vk:120") -
+                        descubra o seu com ./descobrir_tecla.sh.
+    SEGUNDOS_PARA_ACIONAR  quanto tempo segurar a tecla, sozinha, para
+                        acionar. Padrao 3. Diminua para 1,5 se achar
+                        lento; aumente se estiver acionando sem querer.
+                        Zero aciona na hora do aperto - so use zero com
+                        uma tecla que nao seja Ctrl, Alt, Shift ou
+                        Super, senao todo atalho liga o ditado.
+    MODO_DE_ESCUTA      "segurar" (padrao) grava enquanto a tecla
+                        estiver pressionada; solte para terminar.
+                        "alternar" liga num aperto e desliga no outro,
+                        deixando as maos livres no meio - mas ai o
+                        Ctrl estara pressionado quando o texto comecar
+                        a ser escrito, e e melhor evitar.
+    SO_NO_CLAUDE        True (padrao) faz a tecla valer so com o Claude
+                        Code na frente. False libera em qualquer janela
+                        - e ai ela passa a disputar com os atalhos dos
+                        outros programas.
+    VOZ_DO_ESPEAK       qual voz do espeak usar. Padrao "pt-br"; "pt" e a
+                        de Portugal. Veja todas com:
+                            espeak-ng --voices=pt
+    MODELO_DO_PIPER     o caminho de um modelo de voz neural, muito mais
+                        natural que a do espeak. Vazio (o padrao) usa o
+                        espeak. Como conseguir um esta no
+                        PERGUNTAS_E_RESPOSTAS.txt.
+    COMO_ESCREVER       por qual caminho o texto e digitado. "auto" (o
+                        padrao) decide sozinho conforme a sua area de
+                        trabalho. Force com "pynput", "xdotool", "wtype"
+                        ou "ydotool" se o automatico errar.
+    PRONUNCIAS          como falar as palavras que a voz leria
+                        errado - "Claude" saia "clau-de", "PowerShell"
+                        saia soletrado. De um lado a palavra como se
+                        escreve, do outro como se pronuncia em portugues.
+                        A troca vale so na fala: a tela e o registro
+                        continuam certos. Para ouvir como ficou:
+                            python3 claude_em_voz.py --teste-pronuncia
+    VOCABULARIO         as palavras que voce costuma DITAR e o
+                        reconhecedor erra: nome de programa, termo
+                        tecnico, nome de arquivo. Ele passa a preferi-las
+                        quando o som for parecido. Nao exagere: lista
+                        comprida dilui a dica e ele comeca a ouvir essas
+                        palavras onde elas nao estao. Vinte ou trinta e
+                        o ponto certo.
+    MODELO_AO_VIVO      "base" (padrao). Troque por "tiny" se o texto
+                        estiver ficando muito atras da sua voz.
+    MODELO_FINAL        "small" (padrao) e quem revisa. "medium" acerta
+                        mais e demora bem mais. None desliga a revisao.
+    CADENCIA            de quantos em quantos segundos ele reprocessa a
+                        fala em andamento. Aumente se o computador ficar
+                        pesado enquanto voce fala.
+    DEVOLVER_O_FOCO     False para escrever sempre na janela da frente,
+                        sem trazer de volta a janela original.
+    MOSTRAR_NO_TERMINAL True (padrao) faz ele contar o que esta lendo e
+                        entendendo. Como no dia a dia nao ha janela, isso
+                        vai para o registro.txt; para ver ao vivo, ligue
+                        com ./ligar_com_janela.sh.
+    ESCREVER_NA_TELA    False para so guardar no arquivo, sem digitar.
+    GUARDAR_HISTORICO   False para nao guardar arquivo nenhum.
+    AVISO_SONORO        False para trabalhar em silencio.
+    VOLUME_MINIMO       se ele disser "so silencio" quando voce falou,
+                        baixe este numero. Se ele transcrever barulho
+                        de fundo, aumente.
+    MICROFONE           numero do microfone, se voce tiver mais de um.
+                        Veja os numeros com --dispositivos.
+
+
+SE NAO FUNCIONAR
+    ANTES DE TUDO: rode  ./diagnostico.sh
+
+    Ele confere tudo de uma vez - a fala, o microfone, a sua sessao
+    grafica e o jeito de digitar, os dois reconhecedores, os quatro
+    ganchos, o Claude Code e se o programa esta no ar - e DIZ em voz
+    alta quantos problemas achou e quais sao. O que fazer em cada caso
+    fica escrito na tela.
+
+    Leva uns cinco segundos e pode rodar com o programa ligado.
+
+    Ele pega, entre outras coisas, a armadilha mais provavel deste
+    programa: se voce MOVER A PASTA de lugar, os quatro ganchos
+    passam a apontar para o vazio e tudo para de funcionar sem
+    nenhum aviso. O diagnostico diz isso com todas as letras, e a
+    solucao e uma linha:  python3 configurar_ganchos.py
+
+    Se preferir olhar por conta propria:
+    - registro.txt. Como o programa roda solto do terminal, e ali que
+      ele conta o que aconteceu.
+    - A tecla nao faz nada e nao houve bipe nenhum: ele nao esta ligado.
+      Rode ./ligar.sh e espere os dois bipes.
+    - Nada aparece enquanto voce fala: rode --teste-ditado, que mostra o
+      volume captado e o que cada reconhecedor entendeu. Volume perto de
+      zero e microfone mudo ou longe demais.
+    - Nada acontece ao segurar a tecla: (1) o Claude Code esta na
+      frente? Fora dele ela e ignorada de proposito. (2) Segurou os 3
+      segundos inteiros, sem encostar em outra tecla? Qualquer outra
+      tecla cancela a contagem. (3) A tecla chega ao sistema? Rode
+      ./descobrir_tecla.sh.
+    - O texto sai muito atras da sua voz: troque MODELO_AO_VIVO para
+      "tiny", ou feche programas pesados.
+    - Ele escreve frases estranhas de legenda de video: e o
+      reconhecedor inventando em cima de silencio. Aumente VOLUME_MINIMO.
+    - A correcao do fim apagou algo que voce tinha escrito: olhe o
+      registro.txt para ver o que ele fez; se repetir, ponha
+      MODELO_FINAL = None, que desliga a correcao de vez.
+
+
+UM AVISO HONESTO
+    Reconhecimento de fala erra nome proprio, termo tecnico e palavra em
+    ingles. Para conversa normal em portugues ele vai bem, mas sempre
+    leia a frase antes de apertar Enter.
+=========================================================

@@ -1,0 +1,425 @@
+=========================================================
+ CLAUDE EM VOZ (Linux) - INSTALAR DO ZERO
+ (receita completa, para maquina recem-instalada)
+=========================================================
+
+Este arquivo e a RECEITA. Ele nao explica por que as coisas foram
+decididas assim - isso esta no PERGUNTAS_E_RESPOSTAS.txt. Aqui esta
+so o que precisa ser feito, na ordem.
+
+So uma coisa e pressuposta, e vem logo na secao abaixo: o Claude
+Code ja instalado. Todo o resto e montado do zero aqui.
+
+Ambiente de referencia: Linux com Python 3.10 ou mais novo, e uma
+sessao grafica X11. Sobre Wayland, veja o PASSO 2.
+
+
+---------------------------------------------------------
+ O QUE VOCE JA PRECISA TER: O CLAUDE CODE
+---------------------------------------------------------
+
+Este programa e um acessorio do Claude Code: ele le em voz alta as
+respostas do Claude e escreve o que voce dita. Entao o Claude Code
+ja precisa estar instalado e com a sua conta conectada.
+
+E ele NAO E INSTALADO por aqui - nem pelo INSTALAR_TUDO.sh, nem pelo
+caminho a mao. O motivo e simples: quem chega neste programa ja usa o
+Claude todo dia, e passar um instalador por cima trocaria a versao
+dele. Uma instalacao que funciona nao se mexe para acrescentar um
+acessorio.
+
+Para conferir que esta tudo certo, num terminal:
+
+    claude --version
+
+Se responder um numero de versao, pode seguir. Se disser que nao
+conhece o comando, instale o Claude Code primeiro, pela pagina
+oficial, e so depois volte para ca:
+
+    https://docs.claude.com/en/docs/claude-code/setup
+
+
+---------------------------------------------------------
+ O CAMINHO CURTO: UM COMANDO
+---------------------------------------------------------
+
+Copie a pasta ClaudeEmVozLinux para o computador, abra um terminal
+dentro dela e rode:
+
+    bash INSTALAR_TUDO.sh
+
+O "bash" na frente nao e enfeite: dependendo de como voce copiou a
+pasta, os arquivos chegam sem permissao de execucao, e sem ele o
+sistema recusaria. O proprio script conserta isso no fim, e a partir
+dai  ./INSTALAR_TUDO.sh  funciona direto.
+
+Ele faz tudo sozinho, pulando o que ja existir: os programas do
+sistema, as bibliotecas do Python, os reconhecedores de fala e os
+quatro ganchos - estes ultimos ja com os caminhos deste computador,
+sem voce editar nada.
+
+Vai pedir a sua senha uma vez, no comeco: instalar programa do
+sistema exige permissao de administrador. O resto nao pede nada.
+
+Do Claude Code ele nao chega perto: so olha se esta ai.
+
+No fim ele roda a bateria de testes e o diagnostico completo, e DIZ
+em voz alta o que encontrou.
+
+Deu tudo certo? Voce nao precisa ler mais nada; pule para o PASSO 7,
+que sao os testes de conferencia. O resto deste arquivo e o mesmo
+caminho feito a mao.
+
+
+---------------------------------------------------------
+ O QUE VAI SER INSTALADO (visao geral)
+---------------------------------------------------------
+
+  espeak-ng           a voz que le as respostas
+  portaudio           o que permite gravar o microfone
+  xdotool             descobrir a janela da frente e devolver o foco
+  4 bibliotecas       reconhecimento de fala, microfone, teclado
+  2 reconhecedores    os modelos que entendem a sua voz: um rapido,
+                      que escreve enquanto voce fala, e um bom, que
+                      corrige a frase no fim
+  4 ganchos           ligam e desligam tudo sozinho, falam as
+                      perguntas na hora e atendem o comando "voz"
+
+E o que NAO vai ser instalado, para ficar dito de novo: o Claude
+Code. Ele ja e seu, ja esta configurado, e fica como esta.
+
+Os sete passos abaixo cobrem isso, um por vez.
+
+
+---------------------------------------------------------
+ PASSO 1 - COLOCAR A PASTA NO COMPUTADOR
+---------------------------------------------------------
+
+Copie a pasta ClaudeEmVozLinux para onde voce quiser. Ela pode ficar
+em qualquer lugar, mas ANOTE o caminho: ele aparece cinco vezes no
+PASSO 5, se voce for fazer os ganchos a mao.
+
+Um lugar comum e:
+    ~/Programas/ClaudeEmVozLinux
+
+Depois de copiar, de permissao de execucao aos scripts:
+
+    cd ~/Programas/ClaudeEmVozLinux
+    chmod +x *.sh
+
+Sem isso, todo comando comecado por ./ vai ser recusado.
+
+
+---------------------------------------------------------
+ PASSO 2 - CONFERIR A SUA SESSAO GRAFICA
+---------------------------------------------------------
+
+Este passo nao instala nada; e so para voce saber o que esperar.
+
+    echo "$XDG_SESSION_TYPE"
+
+  Respondeu "x11"?      Tudo funciona sem ajuste. Siga em frente.
+
+  Respondeu "wayland"?  A leitura em voz alta funciona igual. O
+                        DITADO precisa de um passo a mais, porque o
+                        Wayland impede - de proposito, por seguranca -
+                        que um programa digite na janela de outro.
+
+Estando no Wayland, escolha um destes:
+
+  a) Instalar o wtype. Funciona no KDE e no Sway; o GNOME recusa.
+         sudo apt install wtype
+
+  b) Entrar na sessao X11. Na tela de login, clique na engrenagem
+     perto do botao de entrar e escolha a opcao com "Xorg" ou "X11".
+     E o caminho mais simples, e funciona em qualquer area de
+     trabalho.
+
+O PERGUNTAS_E_RESPOSTAS.txt, secao 1c, explica o porque disso tudo.
+
+
+---------------------------------------------------------
+ PASSO 3 - INSTALAR OS PROGRAMAS DO SISTEMA
+---------------------------------------------------------
+
+Sao tres, e cada um cobre uma parte:
+
+    espeak-ng     a VOZ. Sem ele o programa funciona e fica mudo.
+    portaudio     o MICROFONE. Sem ele, nao grava nada.
+    xdotool       as JANELAS. Sem ele o ditado nao sabe onde escrever.
+
+Escolha a linha do seu Linux:
+
+  Debian, Ubuntu, Mint, Pop!_OS:
+      sudo apt install espeak-ng espeak-ng-data libportaudio2 xdotool
+
+  Fedora:
+      sudo dnf install espeak-ng portaudio xdotool
+
+  Arch, Manjaro:
+      sudo pacman -S espeak-ng portaudio xdotool
+
+  openSUSE:
+      sudo zypper install espeak-ng portaudio xdotool
+
+Para conferir que a voz existe:
+
+    espeak-ng -v pt-br "teste de voz em portugues"
+
+Se voce ouviu a frase, esta pronto. Se ele reclamar de nao conhecer
+a voz, falta o pacote de dados de idiomas - e o espeak-ng-data da
+primeira linha.
+
+
+---------------------------------------------------------
+ PASSO 4 - INSTALAR AS BIBLIOTECAS E OS RECONHECEDORES
+---------------------------------------------------------
+
+Nesta pasta:
+
+    ./instalar.sh
+
+Ele instala as quatro bibliotecas do Python e baixa os dois
+reconhecedores de fala (uns 600 MB, uma vez so). Esta e a UNICA hora
+em que a internet e usada; depois disso o programa nunca mais sai do
+seu computador.
+
+QUERENDO FAZER NA MAO:
+
+    python3 -m pip install --user -r requirements.txt
+    python3 claude_em_voz.py --baixar
+
+SE O PIP RECUSAR, dizendo "externally-managed-environment": o seu
+Linux esta protegendo os pacotes do sistema, e isso e bom. O caminho
+limpo e um ambiente so para este programa:
+
+    python3 -m venv ~/.venv-claude-em-voz
+    source ~/.venv-claude-em-voz/bin/activate
+    ./instalar.sh
+
+Fazendo assim, rode tambem o PASSO 5 com esse ambiente ligado: os
+ganchos guardam o caminho do Python que os criou, e precisa ser o
+mesmo em que as bibliotecas foram parar.
+
+
+---------------------------------------------------------
+ PASSO 5 - INSTALAR OS QUATRO GANCHOS
+---------------------------------------------------------
+
+Os ganchos sao o que faz o programa ligar e desligar junto com o
+Claude Code, o que faz as perguntas de multipla escolha serem faladas
+NA HORA, e o que atende o comando "voz".
+
+DO JEITO FACIL, e o recomendado:
+
+    python3 configurar_ganchos.py
+
+So isso. Ele descobre sozinho onde esta esta pasta e qual e o seu
+Python, escreve os quatro ganchos com os caminhos certos, preserva o
+que ja existia no arquivo (tema, permissoes, ganchos seus) e guarda
+uma copia de seguranca do arquivo antigo antes de tocar nele. Ele
+tambem cria o comando  /voz , que e um arquivo separado:
+
+    ~/.claude/commands/voz.md
+
+E esse arquivo que faz o  /voz  aparecer na lista quando voce digita
+a barra. Sem ele o menu continua respondendo por  voz  sem barra,
+pelo gancho - mas  /voz  seria recusado como comando desconhecido.
+
+Rodar duas vezes nao duplica nada, e
+
+    python3 configurar_ganchos.py --remover
+
+desfaz.
+
+DO JEITO MANUAL, abra o arquivo:
+    ~/.claude/settings.json
+
+(Ele so existe depois de o Claude Code ter rodado pelo menos uma
+vez. Se nao existir, crie um arquivo com esse nome.)
+
+Para ver o texto exato a colar, com os caminhos JA acertados para a
+sua maquina, rode:
+
+    python3 configurar_ganchos.py --mostrar
+
+Ele imprime o trecho pronto. Copie o pedaco "hooks" para dentro do
+seu settings.json, sem apagar o que ja estiver la.
+
+O QUE TROCAR, se voce mover a pasta depois: nada a mao - basta rodar
+    python3 configurar_ganchos.py
+de dentro da pasta nova. Os quatro caminhos sao refeitos.
+
+DEPOIS DE SALVAR, feche o Claude Code e abra de novo. Ele nem sempre
+recarrega as configuracoes na sessao que ja esta rodando.
+
+
+---------------------------------------------------------
+ PASSO 6 - CONFERIR A TECLA DO DITADO
+---------------------------------------------------------
+
+Pule este passo se estiver tudo bem com o padrao: o Ctrl da ESQUERDA,
+segurado por 3 segundos.
+
+Se quiser outra tecla:
+
+    ./descobrir_tecla.sh
+
+Aperte a tecla desejada e veja o nome que ele mostra. Depois abra
+claude_em_voz.py num editor, procure a linha
+
+    TECLA_DE_FALA = "ctrl_l"
+
+e troque o nome entre aspas pelo que apareceu.
+
+Um aviso que vale para qualquer notebook: a fileira de cima costuma
+vir invertida, e a tecla marcada F9 so manda "f9" com o Fn junto.
+Segurar duas teclas enquanto se fala ocupa as duas maos - por isso o
+padrao e o Ctrl.
+
+
+---------------------------------------------------------
+ PASSO 7 - CONFERIR QUE FUNCIONOU
+---------------------------------------------------------
+
+O ATALHO:
+
+    ./diagnostico.sh
+
+Ele confere sozinho a fala, o microfone, a sua sessao grafica, o jeito
+de digitar, os dois reconhecedores, os quatro ganchos e o Claude Code
+- e DIZ em voz alta o que encontrou. Se ele disser que esta tudo
+certo, faltam so os testes 3, 4 e 5 abaixo, que dependem de voce ver o
+Claude Code respondendo.
+
+Os cinco testes na ordem, cada um isolando uma parte:
+
+1) A VOZ SAI?
+       python3 claude_em_voz.py --teste-voz
+   Ele fala tres frases seguidas. Tem que ouvir as TRES - uma so nao
+   prova nada.
+
+2) O MICROFONE ENTENDE?
+       python3 claude_em_voz.py --teste-ditado
+   Grava 5 segundos e mostra na tela o que entendeu, sem escrever em
+   lugar nenhum. Fale uma frase qualquer.
+
+3) LIGA SOZINHO COM O CLAUDE?
+   Feche tudo, abra o Claude Code. Em alguns segundos ele deve falar
+   "Claude em voz iniciado" e mostrar uma faixa no canto da tela.
+   Depois pergunte qualquer coisa e confira se a resposta e lida.
+
+4) A PERGUNTA DE ESCOLHA E FALADA NA HORA?
+   Peca ao Claude: "me faca uma pergunta de multipla escolha".
+   A pergunta e as opcoes tem que ser faladas ANTES de voce escolher.
+   Se so falarem depois, o gancho PreToolUse do PASSO 5 nao esta
+   valendo.
+
+5) O MENU DA VOZ ATENDE?
+   Digite  voz  na janela do Claude Code e aperte Enter. Tem que
+   aparecer o menu na hora, e a linha NAO pode virar pergunta para o
+   Claude.
+
+E o ditado: clique na janela do Claude Code, SEGURE o Ctrl da
+esquerda, espere o bipe agudo (3 segundos), fale sem soltar, e solte
+ao terminar. O Enter nunca e apertado sozinho - confira a frase e
+envie voce mesmo.
+
+
+---------------------------------------------------------
+ SE ALGUMA COISA NAO RESPONDER
+---------------------------------------------------------
+
+PRIMEIRO, PERGUNTE A ELE:
+
+    ./diagnostico.sh
+
+Ele confere tudo e diz em voz alta quantos problemas achou e quais
+sao. O que fazer em cada caso fica escrito na tela.
+
+E ele pega sozinho a armadilha mais provavel: se voce mover a pasta
+do programa de lugar, os quatro ganchos passam a apontar para o vazio
+e tudo para sem aviso nenhum. O conserto e rodar
+  python3 configurar_ganchos.py
+de dentro da pasta nova.
+
+Se quiser olhar por conta propria: o programa roda solto do terminal,
+entao ele conta o que fez num arquivo.
+
+    registro.txt   (nesta pasta, refeito a cada partida)
+
+E para ver tudo acontecendo ao vivo:
+
+    ./ligar_com_janela.sh
+
+Nao adianta abrir os dois: o segundo percebe que ja existe um rodando
+e sai sozinho. Desligue o outro antes, com ./desligar.sh
+
+Conferencias rapidas, na ordem em que costumam resolver:
+
+  Nao fala nada          -> falta o espeak-ng, ou o pacote de dados
+                            dele (PASSO 3)
+  Nao liga com o Claude  -> os ganchos nao estao instalados, ou
+                            apontam para outra pasta (PASSO 5)
+  Entende so silencio    -> o microfone esta mudo no controle de
+                            volume, ou o seu usuario nao esta no
+                            grupo de audio:
+                              sudo usermod -aG audio $USER
+                            (e preciso sair e entrar de novo)
+  A tecla nao responde   -> espere os dois bipes subindo; os
+                            reconhecedores levam alguns segundos para
+                            carregar. Se nunca responder, veja o
+                            PASSO 2: pode ser Wayland
+  Escreve na janela      -> a tecla so vale com o Claude Code na
+  errada                    frente; e o xdotool precisa estar
+                            instalado (PASSO 3)
+  Parou de falar do      -> talvez a leitura tenha sido desligada sem
+  nada                      querer: digite  /voz  e olhe o menu
+  "voz" virou pergunta   -> o gancho UserPromptSubmit nao esta
+  para o Claude             instalado (PASSO 5)
+  ./algo.sh: permissao   -> falta dar permissao de execucao:
+  negada                      chmod +x *.sh
+
+
+---------------------------------------------------------
+ OS ARQUIVOS DA PASTA, UM POR LINHA
+---------------------------------------------------------
+
+  claude_em_voz.py         o programa inteiro; os ajustes ficam
+                           todos no topo dele, comentados
+  ligar.sh                 liga, solto do terminal
+  desligar.sh              desliga
+  ligar_com_janela.sh      liga preso a este terminal, mostrando
+                           tudo, para diagnostico
+  parar.sh                 desliga em silencio; e o que o gancho de
+                           fim de sessao chama
+  diagnostico.sh           confere tudo e DIZ em voz alta o que
+                           encontrou; e por onde comecar quando
+                           alguma coisa parar de funcionar
+  descobrir_tecla.sh       mostra o que cada tecla do seu teclado
+                           manda
+  testar.sh                confere se o programa continua correto
+                           depois de uma mudanca; so precisa do
+                           Python, e leva cinco segundos
+  testes/                  as verificacoes que o testar.sh roda
+  INSTALAR_TUDO.sh         o pacote de instalacao: um comando e
+                           instala tudo. Nao mexe no Claude Code,
+                           so confere
+  instalar.sh              so as bibliotecas e os reconhecedores,
+                           para reinstalar essa parte sozinha
+  configurar_ganchos.py    so os quatro ganchos e o comando /voz,
+                           com os caminhos deste computador;
+                           --remover desfaz
+  comando_de_voz.py        atende o comando /voz digitado na janela
+                           do Claude; nao roda sozinho
+  interruptor.json         qual metade esta ligada agora; refeito a
+                           cada partida, com tudo ligado
+  requirements.txt         as bibliotecas do Python
+  COMO_USAR.txt            o dia a dia
+  PERGUNTAS_E_RESPOSTAS.txt  o porque de cada decisao
+  INSTALAR_DO_ZERO.txt     este arquivo
+
+  registro.txt             o que aconteceu na ultima partida
+  historico_de_voz.txt     tudo o que voce ja ditou
+  perguntas_pendentes.jsonl  caixa de entrada das perguntas
+                           (apagada a cada partida)

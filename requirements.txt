@@ -1,0 +1,46 @@
+# =============================================================
+#  CLAUDE EM VOZ (Linux) - bibliotecas necessarias
+#
+#  Instalar com:   pip install -r requirements.txt
+#  Ou, sem fixar versao:
+#      pip install faster-whisper sounddevice numpy pynput
+#
+#  As versoes estao fixadas por serem as conferidas na versao
+#  para Windows deste mesmo programa. Se alguma nao existir para
+#  a sua distribuicao ou versao de Python, tire o "==" da linha:
+#  nenhuma delas depende de um numero exato para funcionar.
+#
+#  ATENCAO - isto aqui nao basta. Tres coisas vem do SISTEMA, e
+#  nao do Python:
+#
+#      espeak-ng     a voz. Sem ele o programa fica mudo.
+#      portaudio     o microfone. Sem ele, nao grava.
+#                    (libportaudio2 no Debian e no Ubuntu)
+#      xdotool       descobrir a janela da frente e devolver o
+#                    foco. Sem ele o ditado escreve no lugar
+#                    errado, ou nao escreve.
+#
+#  O ./INSTALAR_TUDO.sh instala os tres sozinho.
+# =============================================================
+
+# Reconhecimento de fala, rodando no proprio processador.
+faster-whisper==1.2.1
+
+# Captura do microfone, e tambem o bipe.
+sounddevice==0.5.5
+numpy==2.5.2
+
+# Ler a tecla de acionar, e digitar o texto quando o caminho
+# escolhido for o pynput.
+pynput==1.8.2
+
+# -------------------------------------------------------------
+# Vem junto, instalado automaticamente pelo faster-whisper e pelo
+# sounddevice. Anotado so como referencia do que funcionava:
+#   av 18.1.0, ctranslate2 4.8.1, huggingface_hub 1.27.0,
+#   onnxruntime 1.28.0, tokenizers 0.23.1, cffi
+# -------------------------------------------------------------
+#
+# O que NAO esta aqui, e nao e esquecimento: pywin32 e comtypes,
+# que sao do Windows. No lugar deles, a fala sai pelo espeak e as
+# janelas pelo xdotool - os dois do sistema, nao do Python.
