@@ -309,6 +309,7 @@ ligado.
 | `teste_interruptor` | o que vira menu e o que segue para o Claude |
 | `teste_ganchos` | preservar o alheio, não duplicar, abortar em JSON quebrado |
 | `teste_diagnostico` | a conferência dos ganchos, inclusive o falso alarme |
+| `teste_som_ocupado` | som ocupado não é defeito; e a fala não pode falhar calada |
 
 Dois detalhes que custaram tempo ao escrever os testes, e que voltarão a morder:
 `Fala()` recebe uma **lista** de pedaços de áudio (é assim que o microfone a
@@ -340,6 +341,25 @@ coberto em `teste_diagnostico`.
 `main()` trata `--diagnostico` **antes** do mutex, como as outras opções: conferir
 tem de funcionar com o programa ligado, que é quando se precisa disso. E o
 `__main__` virou `sys.exit(main() or 0)` para o `.bat` saber se achou problema.
+
+`--teste-voz`, `--teste-pronuncia` e o resumo falado do diagnóstico passam por
+`falar_esperando_a_vez()`, e não por `voz.falar()` direto. Motivo real (visto na
+versão Windows): rodar o teste logo depois de uma resposta comprida encontra o
+**próprio leitor** falando e segurando a saída de som, e o teste despejava um
+erro técnico — quem lesse concluiria que a voz quebrou, com a voz perfeita.
+Agora ele reconhece o caso, explica que **não é defeito**, e espera a vez.
+Aqui a detecção é por texto (`SINAIS_DE_SOM_OCUPADO`), porque cada camada de
+áudio — ALSA, PulseAudio, PipeWire — reclama com palavras diferentes.
+
+E um defeito só desta versão, corrigido junto: `VozDoLinux.falar()` descartava
+o `stderr` e **ignorava o código de saída**. Um espeak que não conseguisse abrir
+o som falhava calado — o programa achava que falou, o registro dizia "falando",
+e não saía som nenhum. Agora `_conferir_o_fim()` levanta erro com a reclamação
+do programa de fala. O flag `calamos` existe para que encerrar a fala de
+propósito (o `/voz 1` no meio da frase) não seja confundido com falha.
+
+A trava que mantém isso honesto: só "som ocupado" vira espera; **qualquer outro
+erro continua subindo**. Está em `teste_som_ocupado`.
 
 ## Vocabulário e pronúncia
 

@@ -1292,6 +1292,7 @@ class VozDoLinux(object):
         import shutil, subprocess           # noqa: E401
         self.subprocess = subprocess
         self.processo = None
+        self.calamos = False
         self.motor = None
 
         if MODELO_DO_PIPER and tem_o_programa("piper") and tocador_de_audio():
@@ -1356,13 +1357,19 @@ class VozDoLinux(object):
 
         comando = self._comando(texto)
         e_shell = isinstance(comando, str)
+        self.calamos = False
 
         try:
             self.processo = self.subprocess.Popen(
                 comando, shell=e_shell,
                 stdin=self.subprocess.PIPE,
                 stdout=self.subprocess.DEVNULL,
-                stderr=self.subprocess.DEVNULL,
+                # A reclamacao do programa de fala e GUARDADA, e nao jogada
+                # fora. Sem isso, um espeak que nao consegue abrir o som
+                # falharia em silencio: o programa acharia que falou, o
+                # registro diria "falando", e nao sairia som nenhum - a pior
+                # especie de defeito, porque nada aponta para ele.
+                stderr=self.subprocess.PIPE,
                 start_new_session=True)
         except Exception as erro:
             print("[voz] nao consegui falar:", erro)
@@ -1380,18 +1387,36 @@ class VozDoLinux(object):
             pass
 
         while True:
-            if self.processo.poll() is not None:
+            codigo = self.processo.poll()
+            if codigo is not None:
+                processo = self.processo
                 self.processo = None
+                self._conferir_o_fim(processo, codigo)
                 return
             if desistir_se is not None and desistir_se():
                 self.calar()
                 return
             time.sleep(0.05)
 
+    def _conferir_o_fim(self, processo, codigo):
+        """Terminou bem? Se nao, levanta o erro com o que o programa disse."""
+        if self.calamos or codigo == 0:
+            return
+        reclamacao = ""
+        try:
+            reclamacao = (processo.stderr.read() or b"").decode(
+                "utf-8", "replace").strip()
+        except Exception:
+            pass
+        raise RuntimeError(
+            "%s terminou com erro %d%s"
+            % (self.motor, codigo, (": " + reclamacao) if reclamacao else ""))
+
     def calar(self):
         """Encerra a fala em andamento, com o programa de audio junto."""
         processo = self.processo
         self.processo = None
+        self.calamos = True          # o fim veio de nos: nao e defeito
         if processo is None:
             return
         try:
@@ -2789,6 +2814,57 @@ def listar_vozes():
         print("modelo em portugues na constante MODELO_DO_PIPER.")
 
 
+# Sinais de "a saida de som esta ocupada por outro programa". Isto aparece o
+# tempo todo em uso normal: rodando um teste logo depois de uma resposta
+# comprida, o proprio leitor esta falando e segurando o som. Sem tratar, o
+# teste despeja um erro tecnico - e quem le conclui que a voz quebrou, quando
+# ela esta perfeita.
+#
+# Sao varias frases porque cada camada de audio reclama com as suas palavras:
+# o ALSA, o PulseAudio e o PipeWire nao dizem a mesma coisa.
+SINAIS_DE_SOM_OCUPADO = (
+    "device or resource busy",
+    "resource busy",
+    "audio open error",
+    "cannot open audio device",
+    "connection refused",          # servidor de audio fora do ar
+    "failed to create stream",
+    "no such device",
+)
+
+
+def som_esta_ocupado(erro):
+    """O erro e "a saida de som esta ocupada", e nao um defeito de verdade?"""
+    texto = str(erro or "").lower()
+    return any(sinal in texto for sinal in SINAIS_DE_SOM_OCUPADO)
+
+
+def falar_esperando_a_vez(voz, texto, tentativas=5, espera=4.0):
+    """
+    Fala, e se o som estiver ocupado, espera a vez em vez de desistir.
+
+    Quem ocupa quase sempre e o proprio leitor deste programa, falando a
+    resposta anterior - entao esperar resolve sozinho em poucos segundos.
+    """
+    for tentativa in range(1, tentativas + 1):
+        try:
+            voz.falar(texto)
+            return True
+        except Exception as erro:
+            if not som_esta_ocupado(erro):
+                raise
+            if tentativa == tentativas:
+                return False
+            if tentativa == 1:
+                print("\n[voz] A saida de som esta ocupada agora - o leitor")
+                print("      deve estar falando uma resposta. Isto NAO e")
+                print("      defeito: vou esperar a vez.")
+            print("      tentando de novo em %d s... (%d de %d)"
+                  % (int(espera), tentativa, tentativas - 1))
+            time.sleep(espera)
+    return False
+
+
 def testar_voz():
     """
     Fala tres frases seguidas de proposito: uma so nao testaria nada - o
@@ -2797,10 +2873,36 @@ def testar_voz():
     voz = montar_voz()
     if voz is None:
         print("Nao consegui falar.")
-        return
-    voz.falar("Primeira frase. O Claude em voz esta funcionando.")
-    voz.falar("Segunda frase. Se voce esta ouvindo isto, a fala nao emudeceu.")
-    voz.falar("Terceira frase. Teste concluido.")
+        return 1
+
+    frases = (
+        "Primeira frase. O Claude em voz esta funcionando.",
+        "Segunda frase. Se voce esta ouvindo isto, a fala nao emudeceu.",
+        "Terceira frase. Teste concluido.",
+    )
+
+    for numero, frase in enumerate(frases, start=1):
+        try:
+            if falar_esperando_a_vez(voz, frase):
+                continue
+        except Exception as erro:
+            print("\nA voz falhou na frase %d de 3:" % numero)
+            print("   ", erro)
+            print("\nConfira o que existe instalado com:")
+            print("    python3 claude_em_voz.py --vozes")
+            return 1
+
+        print("\nO som continuou ocupado o tempo todo, entao o teste nao")
+        print("chegou a acontecer. Nao ha defeito nenhum apontado ate aqui.")
+        print("\nO que fazer: espere o leitor terminar de falar e rode de")
+        print("novo. Se quiser silencio na hora, digite  /voz 1  na janela")
+        print("do Claude Code, faca o teste, e religue com  /voz 4 .")
+        return 1
+
+    print("\nAs tres frases foram faladas.")
+    print("Ouviu as TRES? Se ouviu so a primeira, e justamente o defeito que")
+    print("este teste existe para pegar - a fala emudece da segunda em diante.")
+    return 0
 
 
 def testar_pronuncia(termos=None):
@@ -2834,8 +2936,11 @@ def testar_pronuncia(termos=None):
 
     for escrito, falado in tabela:
         print("  %-16s ->  %s" % (escrito, falado))
-        voz.falar("Escrito: %s." % escrito)
-        voz.falar("Falado: %s." % falado)
+        if not falar_esperando_a_vez(voz, "Escrito: %s." % escrito):
+            print("\nO som ficou ocupado o tempo todo. Espere o leitor")
+            print("terminar de falar, ou digite  /voz 1  antes, e rode de novo.")
+            return 1
+        falar_esperando_a_vez(voz, "Falado: %s." % falado)
 
     print("-" * 62)
     return 0
@@ -3341,9 +3446,13 @@ def diagnosticar():
     frase = _resumo_falado(conferencia)
     if voz is not None:
         try:
-            voz.falar(frase)
+            if not falar_esperando_a_vez(voz, frase):
+                print("\nO som esta ocupado (o leitor deve estar falando), entao")
+                print("o resumo fica so escrito - o diagnostico acima vale igual:")
+                print(" ", frase)
         except Exception as erro:
             print("\n(nao consegui falar o resumo: %s)" % erro)
+            print(" ", frase)
     else:
         print("\nComo a voz nao respondeu, o resumo fica so escrito:")
         print(" ", frase)

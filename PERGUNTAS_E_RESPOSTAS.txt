@@ -448,6 +448,23 @@ Ele escreveu uma frase estranha sobre legendas de video. O que foi isso?
     Amara.org"). Ha tres defesas contra isso, e uma delas e um corte de
     volume. Se acontecer, aumente VOLUME_MINIMO.
 
+Rodei o teste de voz e ele reclamou de erro. A voz quebrou?
+    Quase certamente nao. Se voce rodou o teste logo depois de uma resposta
+    comprida, o proprio leitor estava falando naquele instante e segurando a
+    saida de som.
+
+    Hoje o programa reconhece esse caso: em vez de erro, ele avisa que o som
+    esta ocupado, diz que NAO e defeito, e espera a vez sozinho, tentando de
+    novo por alguns segundos.
+
+    Se voce quiser silencio na hora, digite  /voz 1  antes do teste e religue
+    com  /voz 4  depois.
+
+    E se aparecer erro mesmo assim, ai e outra coisa - e agora ele MOSTRA o
+    que o programa de fala reclamou, em vez de ficar calado. Antes esse tipo
+    de falha passava sem deixar pista: o programa achava que tinha falado, o
+    registro dizia "falando", e nao saia som nenhum.
+
 Ele erra nomes proprios e termos tecnicos.
     Erra menos do que errava, mas ainda erra - vale para qualquer
     reconhecimento de fala. Para conversa normal em portugues ele vai bem.
