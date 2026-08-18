@@ -94,3 +94,52 @@ def rodar(p, comum):
     identificador, texto = voz.extrair_resposta(linha_da_conversa)
     p.certo("a via lenta nao repete o que o gancho ja falou",
             texto is None, "veio: %r" % (texto,))
+
+    # ---------- a explicacao que vem antes da pergunta ----------
+
+    # O Claude Code so grava a mensagem inteira no arquivo da conversa DEPOIS
+    # que a pessoa escolhe. Medido nesta maquina: a pergunta chegou ao gancho
+    # aos 7 segundos e a mensagem foi gravada aos 86, junto com a escolha.
+    # Logo, a explicacao escrita antes da pergunta seria falada depois dela -
+    # e depois de a escolha ja ter sido feita. Ela e descartada.
+    def linha_com_texto_e_pergunta(pergunta):
+        return json.dumps({
+            "type": "assistant",
+            "message": {
+                "id": "msg_texto_e_pergunta",
+                "content": [
+                    {"type": "text", "text": "Vou te mostrar uma escolha."},
+                    {"type": "tool_use", "name": "AskUserQuestion",
+                     "input": pergunta},
+                ],
+            },
+        })
+
+    _, texto = voz.extrair_resposta(linha_com_texto_e_pergunta(PERGUNTA))
+    p.certo("explicacao antes de pergunta ja falada e descartada",
+            texto is None, "veio: %r" % (texto,))
+
+    # Sem o gancho instalado, a via lenta e a unica que existe: ai a mensagem
+    # inteira e falada, e na ordem em que foi escrita.
+    OUTRA = {"questions": [{"question": "Prefere qual cor?",
+                            "header": "Cor",
+                            "options": [{"label": "Azul", "description": "Fria"},
+                                        {"label": "Vermelha",
+                                         "description": "Quente"}]}]}
+    _, texto = voz.extrair_resposta(linha_com_texto_e_pergunta(OUTRA))
+    p.certo("sem o gancho, a explicacao continua sendo falada",
+            texto is not None and "escolha" in texto, "veio: %r" % (texto,))
+    p.contem("sem o gancho, a pergunta vem junto", texto or "",
+             "Prefere qual cor?")
+    p.certo("sem o gancho, a explicacao vem antes da pergunta",
+            (texto or "").index("escolha") < (texto or "x").index("Prefere"))
+
+    # Mensagem comum, sem pergunta nenhuma, nao pode ser afetada pelo corte.
+    so_texto = json.dumps({
+        "type": "assistant",
+        "message": {"id": "msg_so_texto",
+                    "content": [{"type": "text", "text": "Terminei a tarefa."}]},
+    })
+    _, texto = voz.extrair_resposta(so_texto)
+    p.igual("mensagem sem pergunta segue sendo falada por inteiro",
+            texto, "Terminei a tarefa.")

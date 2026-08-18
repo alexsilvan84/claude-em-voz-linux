@@ -331,6 +331,28 @@ As perguntas de escolha sao lidas quando aparecem, ou so depois?
     conversa - tarde, mas lida. E se os dois funcionarem, ela nao e
     falada duas vezes.
 
+E a explicacao que o Claude escreve ANTES da pergunta - por que ela
+nao e lida?
+    Porque ela nao existe ainda no momento em que a pergunta aparece, e
+    quando passa a existir ja e tarde.
+
+    Medido nesta maquina: o gancho entregou a pergunta aos 7 segundos, e
+    o Claude Code so gravou a mensagem inteira - a explicacao junto - aos
+    86 segundos, no instante exato em que a escolha foi feita. A mensagem
+    e gravada de uma vez so, no fim. Entao nao ha como o programa ler a
+    explicacao antes: no momento certo ela nao estava em lugar nenhum.
+
+    Ler depois seria pior: voce ouviria a explicacao da escolha que ja
+    tinha feito, e na ordem trocada - foi o que incomodou quando isso
+    aparecia. Por isso ela e descartada da leitura. Continua na tela,
+    inteira, para quem quiser ler.
+
+    Em troca, a explicacao que importa passou a ir DENTRO da propria
+    pergunta e das opcoes, que sao lidas na hora certa. Se voce estiver
+    sem o gancho instalado, nada disso se aplica: ai a mensagem chega
+    inteira pelo caminho de reserva, e e lida na ordem em que foi
+    escrita.
+
 Como instalo ou conserto esse gancho?
     Ele fica no arquivo de configuracao do Claude Code, em
     .claude\settings.json, dentro do seu usuario. O trecho e:

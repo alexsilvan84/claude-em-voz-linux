@@ -1124,7 +1124,11 @@ def extrair_resposta(linha_json):
     if not isinstance(conteudo, list):
         return None, None
 
-    partes = []
+    # Cada pedaco vai marcado com "isto e explicacao?", porque a explicacao
+    # pode ter de ser descartada depois - veja o corte logo abaixo.
+    pedacos = []
+    pergunta_ja_lida_na_hora = False
+
     for bloco in conteudo:
         if not isinstance(bloco, dict):
             continue
@@ -1133,16 +1137,33 @@ def extrair_resposta(linha_json):
         if tipo == "text":
             texto = bloco.get("text") or ""
             if texto.strip():
-                partes.append(texto)
+                pedacos.append((True, texto))
 
         elif (LER_PERGUNTAS and tipo == "tool_use"
                 and bloco.get("name") == "AskUserQuestion"):
             pergunta = texto_da_pergunta(bloco.get("input"))
+            if not pergunta:
+                continue
             # Esta e a via LENTA: a pergunta so chega aqui depois que voce
             # escolheu. Se a caixa de entrada ja tiver falado esta mesma
             # pergunta na hora certa, nao se repete.
-            if pergunta and not pergunta_ja_falada(pergunta):
-                partes.append(pergunta)
+            if pergunta_ja_falada(pergunta):
+                pergunta_ja_lida_na_hora = True
+            else:
+                pedacos.append((False, pergunta))
+
+    # A explicacao que vem ANTES de uma pergunta chega tarde demais para ser
+    # util. Medido nesta maquina: o gancho entregou a pergunta aos 7 segundos
+    # e o Claude Code so gravou a mensagem inteira - explicacao junto - aos 86,
+    # no instante em que a escolha foi feita. Ou seja, a explicacao seria lida
+    # DEPOIS da pergunta que ela explicava, e depois de voce ja ter escolhido.
+    # Ler assim confunde mais do que ajuda, entao ela e descartada; continua na
+    # tela, e a explicacao que importa vai dentro da propria pergunta.
+    if pergunta_ja_lida_na_hora:
+        pedacos = [(e_texto, texto) for (e_texto, texto) in pedacos
+                   if not e_texto]
+
+    partes = [texto for (_, texto) in pedacos]
 
     if not partes:
         return None, None
